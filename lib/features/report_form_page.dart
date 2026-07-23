@@ -19,8 +19,7 @@ class ReportFormPage extends ConsumerStatefulWidget {
   ConsumerState<ReportFormPage> createState() => _ReportFormPageState();
 }
 
-class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _ReportFormPageState extends ConsumerState<ReportFormPage> {
   Report _report = Report(
     serialNumber: '2026/0001',
     examDate: DateTime.now(),
@@ -32,8 +31,6 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(() => setState(() {}));
     _initReport();
     _startAutoSave();
   }
@@ -80,7 +77,6 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -220,6 +216,20 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
     final doctors = doctorsAsync.valueOrNull ?? [];
     final clinics = clinicsAsync.valueOrNull ?? [];
 
+    final remarksSection = RemarksAndActionsSection(
+      report: _report,
+      onChanged: _updateReport,
+      onSaveDraft: () => _saveReport(status: ReportStatus.draft),
+      onSaveAndPreview: () async {
+        final id = await _saveReport(status: ReportStatus.completed);
+        if (mounted && context.mounted) context.go('/reports/preview/$id');
+      },
+      onPrintDirect: () async {
+        final id = await _saveReport(status: ReportStatus.printed);
+        if (mounted && context.mounted) context.go('/reports/preview/$id');
+      },
+    );
+
     return Shortcuts(
       shortcuts: AppShortcuts.shortcuts,
       child: Actions(
@@ -241,23 +251,32 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
                 children: [
                   // Top Clinical Header Bar
                   _buildHeaderCard(context),
-                  const SizedBox(height: 20),
-
-                  // Segmented Navigation Pill Bar
-                  _buildSegmentedTabBar(context),
                   const SizedBox(height: 24),
 
-                  // Tab Content
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: _buildActiveTabContent(
-                      context,
-                      _tabController.index,
-                      existingPatients,
-                      doctors,
-                      clinics,
-                    ),
+                  // All Sections Stream
+                  PatientInfoFormSection(
+                    report: _report,
+                    existingPatients: existingPatients,
+                    doctors: doctors,
+                    clinics: clinics,
+                    onChanged: _updateReport,
+                    onExistingPatientSelected: _onExistingPatientSelected,
                   ),
+                  const SizedBox(height: 28),
+                  PhysicalExamFormSection(
+                    report: _report,
+                    onChanged: _updateReport,
+                    onSetAllNormal: _setAllPhysicalNormal,
+                  ),
+                  const SizedBox(height: 28),
+                  LabInvestigationsFormSection(
+                    report: _report,
+                    onChanged: _updateReport,
+                    onSetAllNormal: _setAllLabNormal,
+                  ),
+                  const SizedBox(height: 28),
+                  remarksSection,
+                  const SizedBox(height: 48),
                 ],
               ),
             ),
@@ -269,12 +288,15 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
 
   Widget _buildHeaderCard(BuildContext context) {
     final candidateName = _report.patientInfo.name;
-    final displayName = (candidateName != null && candidateName.trim().isNotEmpty)
-        ? candidateName.trim()
-        : 'New Candidate Examination';
+    final hasCandidate = candidateName != null && candidateName.trim().isNotEmpty;
+    final displayName = hasCandidate ? candidateName.trim() : 'New Candidate Examination';
     final isDark = context.isDark;
+    final isReadyToFinalize = hasCandidate &&
+        _report.patientInfo.passportNumber != null &&
+        _report.patientInfo.passportNumber!.trim().isNotEmpty;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -291,11 +313,16 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 20,
+        runSpacing: 16,
         children: [
-          Expanded(
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 260),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(14),
@@ -306,70 +333,90 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
                   child: const Icon(Icons.assignment_ind_rounded, color: Colors.white, size: 30),
                 ),
                 const SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'GAMCA / OCCUPATIONAL SERIAL #${_report.serialNumber}',
+                            style: context.textTheme.labelLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                        AppStatusBadge.fromReportStatus(_report.status, context: context),
+                        if (!isReadyToFinalize)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.6)),
                             ),
-                            child: Text(
-                              'GAMCA / OCCUPATIONAL SERIAL #${_report.serialNumber}',
-                              style: context.textTheme.labelLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.info_outline_rounded, size: 13, color: Color(0xFFFDE68A)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Name & passport required',
+                                  style: context.textTheme.labelSmall?.copyWith(color: const Color(0xFFFDE68A), fontWeight: FontWeight.w700),
+                                ),
+                              ],
                             ),
                           ),
-                          AppStatusBadge.fromReportStatus(_report.status, context: context),
-                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      displayName,
+                      style: context.textTheme.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        displayName,
-                        style: context.textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (_report.patientInfo.passportNumber != null && _report.patientInfo.passportNumber!.isNotEmpty) ...[
-                            const Icon(Icons.badge_outlined, size: 14, color: Colors.white70),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Passport: ${_report.patientInfo.passportNumber} • ',
-                              style: context.textTheme.bodySmall?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                          const Icon(Icons.cloud_done_rounded, size: 14, color: Color(0xFF5EEAD4)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_report.patientInfo.passportNumber != null && _report.patientInfo.passportNumber!.isNotEmpty) ...[
+                          const Icon(Icons.badge_outlined, size: 14, color: Colors.white70),
                           const SizedBox(width: 4),
                           Text(
-                            _lastSavedTime != null ? 'Auto-saved at $_lastSavedTime' : 'System auto-save active (every 45s)',
-                            style: context.textTheme.bodySmall?.copyWith(color: const Color(0xFF5EEAD4), fontWeight: FontWeight.w600),
+                            'Passport: ${_report.patientInfo.passportNumber} • ',
+                            style: context.textTheme.bodySmall?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
                           ),
                         ],
-                      ),
-                    ],
-                  ),
+                        const Icon(Icons.cloud_done_rounded, size: 14, color: Color(0xFF5EEAD4)),
+                        const SizedBox(width: 4),
+                        Text(
+                          _lastSavedTime != null ? 'Auto-saved at $_lastSavedTime' : 'System auto-save active (every 45s)',
+                          style: context.textTheme.bodySmall?.copyWith(color: const Color(0xFF5EEAD4), fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 20),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
@@ -406,8 +453,8 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
                   if (Validators.required(_report.patientInfo.name) != null ||
                       Validators.required(_report.patientInfo.passportNumber) != null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Please enter Candidate Full Name and Passport Number before generating PDF preview.'),
+                      const SnackBar(
+                        content: Text('Please enter Candidate Full Name and Passport Number before generating PDF preview.'),
                         behavior: SnackBarBehavior.floating,
                         backgroundColor: AppColors.error,
                       ),
@@ -423,138 +470,5 @@ class _ReportFormPageState extends ConsumerState<ReportFormPage> with SingleTick
         ],
       ),
     );
-  }
-
-  Widget _buildSegmentedTabBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: context.isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.4)),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          color: context.colorScheme.primary,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: context.colorScheme.primary.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        labelColor: Colors.white,
-        unselectedLabelColor: context.colorScheme.onSurfaceVariant,
-        labelStyle: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-        unselectedLabelStyle: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-        dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(
-            icon: Icon(Icons.view_stream_rounded, size: 18),
-            text: 'All Sections Stream',
-          ),
-          Tab(
-            icon: Icon(Icons.person_pin_circle_rounded, size: 18),
-            text: '1. Candidate Profile',
-          ),
-          Tab(
-            icon: Icon(Icons.accessibility_new_rounded, size: 18),
-            text: '2. Physical & Vitals',
-          ),
-          Tab(
-            icon: Icon(Icons.biotech_rounded, size: 18),
-            text: '3. Lab & Serology',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveTabContent(
-    BuildContext context,
-    int tabIndex,
-    List<Patient> existingPatients,
-    List<Doctor> doctors,
-    List<Clinic> clinics,
-  ) {
-    switch (tabIndex) {
-      case 1:
-        return KeyedSubtree(
-          key: const ValueKey('tab1'),
-          child: PatientInfoFormSection(
-            report: _report,
-            existingPatients: existingPatients,
-            doctors: doctors,
-            clinics: clinics,
-            onChanged: _updateReport,
-            onExistingPatientSelected: _onExistingPatientSelected,
-          ),
-        );
-      case 2:
-        return KeyedSubtree(
-          key: const ValueKey('tab2'),
-          child: PhysicalExamFormSection(
-            report: _report,
-            onChanged: _updateReport,
-            onSetAllNormal: _setAllPhysicalNormal,
-          ),
-        );
-      case 3:
-        return KeyedSubtree(
-          key: const ValueKey('tab3'),
-          child: LabInvestigationsFormSection(
-            report: _report,
-            onChanged: _updateReport,
-            onSetAllNormal: _setAllLabNormal,
-          ),
-        );
-      case 0:
-      default:
-        return KeyedSubtree(
-          key: const ValueKey('tab0'),
-          child: Column(
-            children: [
-              PatientInfoFormSection(
-                report: _report,
-                existingPatients: existingPatients,
-                doctors: doctors,
-                clinics: clinics,
-                onChanged: _updateReport,
-                onExistingPatientSelected: _onExistingPatientSelected,
-              ),
-              const SizedBox(height: 28),
-              PhysicalExamFormSection(
-                report: _report,
-                onChanged: _updateReport,
-                onSetAllNormal: _setAllPhysicalNormal,
-              ),
-              const SizedBox(height: 28),
-              LabInvestigationsFormSection(
-                report: _report,
-                onChanged: _updateReport,
-                onSetAllNormal: _setAllLabNormal,
-              ),
-              const SizedBox(height: 28),
-              RemarksAndActionsSection(
-                report: _report,
-                onChanged: _updateReport,
-                onSaveDraft: () => _saveReport(status: ReportStatus.draft),
-                onSaveAndPreview: () async {
-                  final id = await _saveReport(status: ReportStatus.completed);
-                  if (mounted && context.mounted) context.go('/reports/preview/$id');
-                },
-                onPrintDirect: () async {
-                  final id = await _saveReport(status: ReportStatus.printed);
-                  if (mounted && context.mounted) context.go('/reports/preview/$id');
-                },
-              ),
-              const SizedBox(height: 48),
-            ],
-          ),
-        );
-    }
   }
 }

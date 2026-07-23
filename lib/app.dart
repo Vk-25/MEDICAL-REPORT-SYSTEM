@@ -10,6 +10,20 @@ class MedicalReportApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<AsyncValue<dynamic>>(appSettingsProvider, (previous, next) {
+      if (next.hasValue && next.value != null) {
+        final settings = next.value!;
+        final savedModeStr = settings.themeMode;
+        final savedMode = ThemeMode.values.firstWhere(
+          (e) => e.name == savedModeStr,
+          orElse: () => ThemeMode.light,
+        );
+        if (ref.read(themeModeProvider) != savedMode) {
+          ref.read(themeModeProvider.notifier).state = savedMode;
+        }
+      }
+    });
+
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(

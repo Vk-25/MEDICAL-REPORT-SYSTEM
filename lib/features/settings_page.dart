@@ -72,6 +72,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       defaultDoctorName: _doctorNameController.text.trim(),
       doctorQualifications: _doctorQualController.text.trim(),
       enableAutoBackup: _enableAutoBackup,
+      themeMode: ref.read(themeModeProvider).name,
     );
 
     await ref.read(settingsRepositoryProvider).save(updated);
@@ -127,16 +128,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             margin: const EdgeInsets.only(right: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
+                              color: context.isDark ? const Color(0xFF422006) : const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFFD97706)),
+                              border: Border.all(color: context.isDark ? const Color(0xFFF59E0B) : const Color(0xFFD97706)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.edit_attributes_rounded, size: 14, color: Color(0xFFB45309)),
+                                Icon(Icons.edit_attributes_rounded, size: 14, color: context.isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309)),
                                 const SizedBox(width: 4),
-                                Text('Unsaved Changes', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, color: const Color(0xFFB45309))),
+                                Text('Unsaved Changes', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, color: context.isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309))),
                               ],
                             ),
                           ),
@@ -156,6 +157,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     currentMode: currentThemeMode,
                     onChanged: (mode) {
                       ref.read(themeModeProvider.notifier).state = mode;
+                      ref.read(settingsRepositoryProvider).setValue('themeMode', mode.name);
                     },
                   ),
                   const SizedBox(height: 28),
@@ -311,31 +313,50 @@ class _ThemeOptionTile extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.all(18),
-      border: isSelected ? Border.all(color: color, width: 2) : null,
+      backgroundColor: isSelected ? color : null,
+      border: Border.all(
+        color: isSelected ? color : context.colorScheme.outline.withValues(alpha: 0.4),
+        width: isSelected ? 2 : 1,
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: isDark ? 0.2 : 0.1),
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : color.withValues(alpha: isDark ? 0.2 : 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: isSelected ? Colors.white : color, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-                Text(subtitle, style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant, fontSize: 11)),
+                Text(
+                  title,
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : context.colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: isSelected ? Colors.white.withValues(alpha: 0.85) : context.colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
-          if (isSelected)
-            Icon(Icons.check_circle_rounded, color: color, size: 22)
-          else
-            Icon(Icons.circle_outlined, color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.3), size: 22),
+          Icon(
+            isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+            color: isSelected ? Colors.white : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+            size: 22,
+          ),
         ],
       ),
     );

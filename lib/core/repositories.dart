@@ -405,6 +405,7 @@ class SettingsRepository {
     final docName = await getValue('defaultDoctorName') ?? 'Dr. Rajesh Sharma';
     final docQual = await getValue('doctorQualifications') ?? 'MBBS, MD (General Medicine)';
     final autoBackup = (await getValue('enableAutoBackup')) != 'false';
+    final themeMode = await getValue('themeMode') ?? 'light';
 
     return AppSettings(
       serialPrefix: prefix,
@@ -414,6 +415,7 @@ class SettingsRepository {
       defaultDoctorName: docName,
       doctorQualifications: docQual,
       enableAutoBackup: autoBackup,
+      themeMode: themeMode,
     );
   }
 
@@ -425,6 +427,7 @@ class SettingsRepository {
     await setValue('defaultDoctorName', settings.defaultDoctorName);
     await setValue('doctorQualifications', settings.doctorQualifications);
     await setValue('enableAutoBackup', settings.enableAutoBackup ? 'true' : 'false');
+    await setValue('themeMode', settings.themeMode);
   }
 
   Stream<AppSettings> watchAppSettings() async* {

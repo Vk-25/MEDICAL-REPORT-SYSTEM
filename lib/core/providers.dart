@@ -65,7 +65,7 @@ final exportServiceProvider = Provider<ExportService>((ref) {
 // ------------------- STATE PROVIDERS -------------------
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) {
-  return ThemeMode.system;
+  return ThemeMode.light;
 });
 
 final searchQueryProvider = StateProvider<String>((ref) {

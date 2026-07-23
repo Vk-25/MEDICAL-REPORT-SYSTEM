@@ -197,145 +197,152 @@ class _PatientsPageState extends ConsumerState<PatientsPage> {
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
-            dataRowMinHeight: 68,
-            dataRowMaxHeight: 68,
-            horizontalMargin: 24,
-            columnSpacing: 32,
-            columns: [
-              DataColumn(label: Text('CANDIDATE NAME & GENDER', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('PASSPORT NUMBER', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('NATIONALITY', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('AGE / DOB', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('CONTACT PHONE', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-            ],
-            rows: patients.map((patient) {
-              final initial = patient.fullName.isNotEmpty ? patient.fullName.substring(0, 1).toUpperCase() : '?';
-              final isMale = patient.gender.toUpperCase().startsWith('M');
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
+                  dataRowMinHeight: 68,
+                  dataRowMaxHeight: 68,
+                  horizontalMargin: 24,
+                  columnSpacing: 32,
+                  columns: [
+                    DataColumn(label: Text('CANDIDATE NAME & GENDER', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('PASSPORT NUMBER', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('NATIONALITY', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('AGE / DOB', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('CONTACT PHONE', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                  ],
+                  rows: patients.map((patient) {
+                    final initial = patient.fullName.isNotEmpty ? patient.fullName.substring(0, 1).toUpperCase() : '?';
+                    final isMale = patient.gender.toUpperCase().startsWith('M');
 
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: isMale
-                              ? const Color(0xFF0284C7).withValues(alpha: 0.15)
-                              : const Color(0xFF9333EA).withValues(alpha: 0.15),
-                          child: Text(
-                            initial,
-                            style: TextStyle(
-                              color: isMale ? const Color(0xFF0284C7) : const Color(0xFF9333EA),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: isMale
+                                    ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                                    : const Color(0xFF9333EA).withValues(alpha: 0.15),
+                                child: Text(
+                                  initial,
+                                  style: TextStyle(
+                                    color: isMale ? const Color(0xFF0284C7) : const Color(0xFF9333EA),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    patient.fullName,
+                                    style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        isMale ? Icons.male_rounded : Icons.female_rounded,
+                                        size: 14,
+                                        color: context.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        patient.gender.toUpperCase(),
+                                        style: context.textTheme.bodySmall?.copyWith(fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: context.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.6)),
+                            ),
+                            child: Text(
+                              patient.passportNumber,
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'monospace',
+                                color: context.colorScheme.primary,
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 14),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              patient.fullName,
-                              style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            Row(
-                              children: [
-                                Icon(
-                                  isMale ? Icons.male_rounded : Icons.female_rounded,
-                                  size: 14,
-                                  color: context.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  patient.gender.toUpperCase(),
-                                  style: context.textTheme.bodySmall?.copyWith(fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  DataCell(
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: context.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.6)),
-                      ),
-                      child: Text(
-                        patient.passportNumber,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'monospace',
-                          color: context.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      patient.nationality.isEmpty ? 'Not Specified' : patient.nationality,
-                      style: context.textTheme.bodyMedium,
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      '${patient.age} Yrs',
-                      style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      patient.phone != null && patient.phone!.isNotEmpty ? patient.phone! : 'N/A',
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: patient.phone != null ? context.colorScheme.onSurface : context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // Start examination for this patient
-                            context.go('${AppRoutes.reportGenerate}?patientId=${patient.id}');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(0, 36),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        DataCell(
+                          Text(
+                            patient.nationality.isEmpty ? 'Not Specified' : patient.nationality,
+                            style: context.textTheme.bodyMedium,
                           ),
-                          icon: const Icon(Icons.post_add_rounded, size: 16),
-                          label: const Text('New Exam', style: TextStyle(fontSize: 12)),
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          tooltip: 'Edit Candidate Details',
-                          onPressed: () => _showPatientDialog(context, patient: patient),
+                        DataCell(
+                          Text(
+                            '${patient.age} Yrs',
+                            style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                          ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete_outline_rounded, size: 18, color: context.colorScheme.error),
-                          tooltip: 'Delete Candidate',
-                          onPressed: () => _deletePatient(patient),
+                        DataCell(
+                          Text(
+                            patient.phone != null && patient.phone!.isNotEmpty ? patient.phone! : 'N/A',
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              color: patient.phone != null ? context.colorScheme.onSurface : context.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  // Start examination for this patient
+                                  context.go('${AppRoutes.reportGenerate}?patientId=${patient.id}');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(0, 36),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                ),
+                                icon: const Icon(Icons.post_add_rounded, size: 16),
+                                label: const Text('New Exam', style: TextStyle(fontSize: 12)),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                tooltip: 'Edit Candidate Details',
+                                onPressed: () => _showPatientDialog(context, patient: patient),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline_rounded, size: 18, color: context.colorScheme.error),
+                                tooltip: 'Delete Candidate',
+                                onPressed: () => _deletePatient(patient),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

@@ -1260,6 +1260,7 @@ class AppSettings {
   final String defaultDoctorName;
   final String doctorQualifications;
   final bool enableAutoBackup;
+  final String themeMode;
 
   const AppSettings({
     required this.serialPrefix,
@@ -1269,6 +1270,7 @@ class AppSettings {
     required this.defaultDoctorName,
     required this.doctorQualifications,
     required this.enableAutoBackup,
+    this.themeMode = 'light',
   });
 
   factory AppSettings.defaults() => const AppSettings(
@@ -1279,6 +1281,7 @@ class AppSettings {
         defaultDoctorName: 'Dr. Rajesh Sharma',
         doctorQualifications: 'MBBS, MD (General Medicine)',
         enableAutoBackup: true,
+        themeMode: 'light',
       );
 
   AppSettings copyWith({
@@ -1289,6 +1292,7 @@ class AppSettings {
     String? defaultDoctorName,
     String? doctorQualifications,
     bool? enableAutoBackup,
+    String? themeMode,
   }) {
     return AppSettings(
       serialPrefix: serialPrefix ?? this.serialPrefix,
@@ -1298,6 +1302,7 @@ class AppSettings {
       defaultDoctorName: defaultDoctorName ?? this.defaultDoctorName,
       doctorQualifications: doctorQualifications ?? this.doctorQualifications,
       enableAutoBackup: enableAutoBackup ?? this.enableAutoBackup,
+      themeMode: themeMode ?? this.themeMode,
     );
   }
 }

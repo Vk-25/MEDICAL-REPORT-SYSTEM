@@ -220,6 +220,7 @@ class AppNavigationRail extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  // TODO: Fetch clinic name from settings
                                   Text(
                                     'SHANTI CLINIC',
                                     style: context.textTheme.titleSmall?.copyWith(
@@ -347,6 +348,7 @@ class AppNavigationRail extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // TODO: Fetch doctor name from settings
                             Text(
                               'Dr. A. Sharma',
                               style: context.textTheme.bodyMedium?.copyWith(
@@ -529,51 +531,59 @@ class AppTopBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _getTitle(),
-                style: context.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: context.colorScheme.onSurface,
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getTitle(),
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.colorScheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Shanti Clinic EMR • Medical Examination Portal',
-                style: context.textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
-                  color: context.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 2),
+                Text(
+                  'Shanti Clinic EMR • Medical Examination Portal',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 16),
 
           // Frosted Search Field
-          Container(
-            width: 320,
-            height: 42,
-            decoration: BoxDecoration(
-              color: isDark ? context.colorScheme.surfaceContainer : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.6)),
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Quick Search (Ctrl+F) candidate, serial #...',
-                hintStyle: context.textTheme.bodySmall?.copyWith(fontSize: 12),
-                prefixIcon: Icon(Icons.search_rounded, size: 18, color: context.colorScheme.onSurfaceVariant),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          Flexible(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 320),
+              height: 42,
+              decoration: BoxDecoration(
+                color: isDark ? context.colorScheme.surfaceContainer : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.6)),
               ),
-              onChanged: (value) {
-                ref.read(searchQueryProvider.notifier).state = value;
-              },
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Quick Search (Ctrl+F) candidate, serial #...',
+                  hintStyle: context.textTheme.bodySmall?.copyWith(fontSize: 12),
+                  prefixIcon: Icon(Icons.search_rounded, size: 18, color: context.colorScheme.onSurfaceVariant),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                onChanged: (value) {
+                  ref.read(searchQueryProvider.notifier).state = value;
+                },
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -596,7 +606,9 @@ class AppTopBar extends ConsumerWidget {
                   ),
                   tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
                   onPressed: () {
-                    ref.read(themeModeProvider.notifier).state = isDark ? ThemeMode.light : ThemeMode.dark;
+                    final newMode = isDark ? ThemeMode.light : ThemeMode.dark;
+                    ref.read(themeModeProvider.notifier).state = newMode;
+                    ref.read(settingsRepositoryProvider).setValue('themeMode', newMode.name);
                   },
                 ),
                 Container(width: 1, height: 24, color: context.colorScheme.outline),

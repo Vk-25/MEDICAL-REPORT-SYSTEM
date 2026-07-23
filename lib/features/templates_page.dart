@@ -52,7 +52,7 @@ class _TemplatesPageState extends ConsumerState<TemplatesPage> {
         await ref.read(templateRepositoryProvider).save(t.copyWith(isDefault: false));
       }
     }
-    await ref.read(templateRepositoryProvider).save(template.copyWith(isDefault: true).toTemplate());
+    await ref.read(templateRepositoryProvider).save(template.copyWith(isDefault: true));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

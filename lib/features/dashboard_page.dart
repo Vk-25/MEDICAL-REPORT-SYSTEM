@@ -199,6 +199,8 @@ class _WelcomeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
@@ -250,7 +252,7 @@ class _WelcomeBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Good Morning, Dr. Sharma',
+                  greeting,
                   style: context.textTheme.headlineMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -278,15 +280,23 @@ class _WelcomeBanner extends StatelessWidget {
                       label: const Text('New Examination Report', style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                     const SizedBox(width: 14),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(100),
                       ),
-                      icon: const Icon(Icons.calendar_today_rounded, size: 16),
-                      label: Text(DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now())),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_today_rounded, size: 16, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now()),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -523,117 +533,124 @@ class _RecentReportsCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
-            dataRowMinHeight: 64,
-            dataRowMaxHeight: 64,
-            horizontalMargin: 24,
-            columnSpacing: 28,
-            columns: [
-              DataColumn(label: Text('SERIAL #', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('CANDIDATE / PATIENT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('PASSPORT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('EXAM DATE', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('STATUS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('CLINICAL FIT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-            ],
-            rows: reports.map((report) {
-              final patient = _findPatient(report.patientId);
-              final name = patient?.fullName ?? report.patientName ?? 'Unknown Candidate';
-              final passport = patient?.passportNumber ?? report.passportNumber ?? 'N/A';
-              final initial = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
+                  dataRowMinHeight: 64,
+                  dataRowMaxHeight: 64,
+                  horizontalMargin: 24,
+                  columnSpacing: 28,
+                  columns: [
+                    DataColumn(label: Text('SERIAL #', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('CANDIDATE / PATIENT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('PASSPORT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('EXAM DATE', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('STATUS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('CLINICAL FIT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                  ],
+                  rows: reports.map((report) {
+                    final patient = _findPatient(report.patientId);
+                    final name = patient?.fullName ?? report.patientName ?? 'Unknown Candidate';
+                    final passport = patient?.passportNumber ?? report.passportNumber ?? 'N/A';
+                    final initial = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
 
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Text(
-                      report.serialNumber,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: context.colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: context.colorScheme.primary.withValues(alpha: 0.15),
-                          child: Text(
-                            initial,
-                            style: TextStyle(
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          Text(
+                            report.serialNumber,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                               color: context.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            if (patient?.nationality != null)
-                              Text(
-                                patient!.nationality,
-                                style: context.textTheme.bodySmall?.copyWith(fontSize: 11),
+                        DataCell(
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: context.colorScheme.primary.withValues(alpha: 0.15),
+                                child: Text(
+                                  initial,
+                                  style: TextStyle(
+                                    color: context.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
-                          ],
+                              const SizedBox(width: 12),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                  if (patient?.nationality != null)
+                                    Text(
+                                      patient!.nationality,
+                                      style: context.textTheme.bodySmall?.copyWith(fontSize: 11),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: context.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.6)),
+                            ),
+                            child: Text(
+                              passport,
+                              style: context.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontFamily: 'monospace'),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            DateFormat('dd MMM yyyy').format(report.examinationDate),
+                            style: context.textTheme.bodyMedium,
+                          ),
+                        ),
+                        DataCell(AppStatusBadge.fromReportStatus(report.status, context: context)),
+                        DataCell(AppStatusBadge.fromResult(report.finalStatus, context: context)),
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.visibility_outlined, size: 20),
+                                tooltip: 'Preview & Print PDF',
+                                onPressed: () => context.go('/reports/preview/${report.id}'),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 20),
+                                tooltip: 'Edit Examination Details',
+                                onPressed: () => context.go('/reports/generate?id=${report.id}'),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                  DataCell(
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: context.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: context.colorScheme.outline.withValues(alpha: 0.6)),
-                      ),
-                      child: Text(
-                        passport,
-                        style: context.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontFamily: 'monospace'),
-                      ),
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      DateFormat('dd MMM yyyy').format(report.examinationDate),
-                      style: context.textTheme.bodyMedium,
-                    ),
-                  ),
-                  DataCell(AppStatusBadge.fromReportStatus(report.status, context: context)),
-                  DataCell(AppStatusBadge.fromResult(report.finalStatus, context: context)),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.visibility_outlined, size: 20),
-                          tooltip: 'Preview & Print PDF',
-                          onPressed: () => context.go('/reports/preview/${report.id}'),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 20),
-                          tooltip: 'Edit Examination Details',
-                          onPressed: () => context.go('/reports/generate?id=${report.id}'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

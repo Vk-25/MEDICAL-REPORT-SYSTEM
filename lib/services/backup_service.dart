@@ -41,12 +41,19 @@ class BackupService {
     if (!await backupFile.exists()) {
       throw Exception('Selected backup file no longer exists.');
     }
-    // Isar copyToFile can restore if we close or copy into db dir, or we can copy bytes directly over db file when closed or cleared.
-    // In Isar v3, we clear collections and import, or copy bytes to target directory.
-    await isar.writeTxn(() async {
-      await isar.clear();
-    });
-    // Copy data from backupFile to current database path if supported or re-open
+    
+    // Get the database directory path
+    final dbDir = isar.directory;
+    if (dbDir == null) {
+      throw Exception('Could not determine database directory.');
+    }
+    
+    // Close the current Isar instance (requires app restart to re-initialize)
+    await isar.close();
+    
+    // Copy backup file to the database location
+    final dbFile = File(p.join(dbDir, 'default.isar'));
+    await backupFile.copy(dbFile.path);
   }
 
   /// Deletes a specific backup snapshot file from disk.

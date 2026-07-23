@@ -188,78 +188,80 @@ class _ReportHistoryPageState extends ConsumerState<ReportHistoryPage> {
                     // Search & Filter Toolbar
                     AppCard(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            flex: 3,
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: 'Search by serial #, candidate name, passport number, result...',
-                                prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.clear_rounded, size: 18),
-                                        onPressed: () => setState(() => _searchController.clear()),
-                                      )
-                                    : null,
-                              ),
-                              onChanged: (_) => setState(() {}),
+                          TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search by serial #, candidate name, passport number, result...',
+                              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear_rounded, size: 18),
+                                      onPressed: () => setState(() => _searchController.clear()),
+                                    )
+                                  : null,
                             ),
+                            onChanged: (_) => setState(() {}),
                           ),
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: 180,
-                            child: DropdownButtonFormField<ReportStatus?>(
-                              isExpanded: true,
-                              value: _selectedStatusFilter,
-                              decoration: const InputDecoration(
-                                labelText: 'Report Status',
-                                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 12,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 180,
+                                child: DropdownButtonFormField<ReportStatus?>(
+                                  isExpanded: true,
+                                  value: _selectedStatusFilter,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Report Status',
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(value: null, child: Text('All Statuses')),
+                                    DropdownMenuItem(value: ReportStatus.draft, child: Text('Draft')),
+                                    DropdownMenuItem(value: ReportStatus.pending, child: Text('Pending')),
+                                    DropdownMenuItem(value: ReportStatus.completed, child: Text('Completed')),
+                                    DropdownMenuItem(value: ReportStatus.printed, child: Text('Printed')),
+                                  ],
+                                  onChanged: (val) => setState(() => _selectedStatusFilter = val),
+                                ),
                               ),
-                              items: const [
-                                DropdownMenuItem(value: null, child: Text('All Statuses')),
-                                DropdownMenuItem(value: ReportStatus.draft, child: Text('Draft')),
-                                DropdownMenuItem(value: ReportStatus.pending, child: Text('Pending')),
-                                DropdownMenuItem(value: ReportStatus.completed, child: Text('Completed')),
-                                DropdownMenuItem(value: ReportStatus.printed, child: Text('Printed')),
-                              ],
-                              onChanged: (val) => setState(() => _selectedStatusFilter = val),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            width: 170,
-                            child: DropdownButtonFormField<String>(
-                              isExpanded: true,
-                              value: _selectedResultFilter,
-                              decoration: const InputDecoration(
-                                labelText: 'Medical Fit Result',
-                                contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              SizedBox(
+                                width: 170,
+                                child: DropdownButtonFormField<String>(
+                                  isExpanded: true,
+                                  value: _selectedResultFilter,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Medical Fit Result',
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(value: 'All', child: Text('All Results')),
+                                    DropdownMenuItem(value: 'FIT', child: Text('Fit / Normal')),
+                                    DropdownMenuItem(value: 'UNFIT', child: Text('Unfit / Abnormal')),
+                                    DropdownMenuItem(value: 'PENDING', child: Text('Pending Result')),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) setState(() => _selectedResultFilter = val);
+                                  },
+                                ),
                               ),
-                              items: const [
-                                DropdownMenuItem(value: 'All', child: Text('All Results')),
-                                DropdownMenuItem(value: 'FIT', child: Text('Fit / Normal')),
-                                DropdownMenuItem(value: 'UNFIT', child: Text('Unfit / Abnormal')),
-                                DropdownMenuItem(value: 'PENDING', child: Text('Pending Result')),
-                              ],
-                              onChanged: (val) {
-                                if (val != null) setState(() => _selectedResultFilter = val);
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _selectedStatusFilter = null;
-                                _selectedResultFilter = 'All';
-                              });
-                              ref.read(searchQueryProvider.notifier).state = '';
-                            },
-                            icon: const Icon(Icons.refresh_rounded, size: 18),
-                            label: const Text('Reset'),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _selectedStatusFilter = null;
+                                    _selectedResultFilter = 'All';
+                                  });
+                                  ref.read(searchQueryProvider.notifier).state = '';
+                                },
+                                icon: const Icon(Icons.refresh_rounded, size: 18),
+                                label: const Text('Reset'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -395,9 +397,13 @@ class _ReportHistoryPageState extends ConsumerState<ReportHistoryPage> {
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
             headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
             dataRowMinHeight: 68,
             dataRowMaxHeight: 68,
@@ -552,9 +558,12 @@ class _ReportHistoryPageState extends ConsumerState<ReportHistoryPage> {
                 ],
               );
             }).toList(),
+                  ),
+                ),
+              );
+            },
           ),
         ),
-      ),
-    );
+      );
   }
 }

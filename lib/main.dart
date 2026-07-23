@@ -21,6 +21,7 @@ void main() async {
       title: '${AppConfig.appName} - v${AppConfig.version}',
     );
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.maximize();
       await windowManager.show();
       await windowManager.focus();
     });

@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import '../core/utils.dart';
 
 /// Floating search input with debounce mechanism.
@@ -63,53 +61,7 @@ class AppDataTable extends StatelessWidget {
   }
 }
 
-/// Image upload picker with local preview.
-class AppPhotoPicker extends StatelessWidget {
-  final String? currentPhotoPath;
-  final ValueChanged<String?> onPhotoSelected;
 
-  const AppPhotoPicker({
-    super.key,
-    this.currentPhotoPath,
-    required this.onPhotoSelected,
-  });
-
-  Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && result.files.single.path != null) {
-      onPhotoSelected(result.files.single.path!);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        width: 120,
-        height: 140,
-        decoration: BoxDecoration(
-          border: Border.all(color: context.colorScheme.outline),
-          borderRadius: BorderRadius.circular(8),
-          color: context.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        ),
-        child: currentPhotoPath != null && File(currentPhotoPath!).existsSync()
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(File(currentPhotoPath!), fit: BoxFit.cover),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_a_photo_outlined, size: 32, color: context.colorScheme.primary),
-                  const SizedBox(height: 8),
-                  Text('Upload Photo', style: context.textTheme.bodySmall),
-                ],
-              ),
-      ),
-    );
-  }
-}
 
 /// Context menu wrapper for right-click actions on desktop rows.
 class AppContextMenu extends StatelessWidget {

@@ -236,6 +236,8 @@ class _MasterDataPageState extends ConsumerState<MasterDataPage> with SingleTick
                               ),
                               child: TabBar(
                                 controller: _tabController,
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                indicatorPadding: EdgeInsets.zero,
                                 indicator: BoxDecoration(
                                   color: context.colorScheme.primary,
                                   borderRadius: BorderRadius.circular(10),
@@ -337,64 +339,71 @@ class _MasterDataPageState extends ConsumerState<MasterDataPage> with SingleTick
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
-            dataRowMinHeight: 60,
-            dataRowMaxHeight: 60,
-            horizontalMargin: 24,
-            columnSpacing: 48,
-            columns: [
-              DataColumn(label: Text('#', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text(isMedicalHistory ? 'CLINICAL HISTORY CONDITION / QUESTION' : 'PHYSICAL EVALUATION PARAMETER', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('DEFAULT QUESTIONNAIRE TYPE', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-            ],
-            rows: items.asMap().entries.map((entry) {
-              final idx = entry.key + 1;
-              final item = entry.value;
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
+                  dataRowMinHeight: 60,
+                  dataRowMaxHeight: 60,
+                  horizontalMargin: 24,
+                  columnSpacing: 48,
+                  columns: [
+                    DataColumn(label: Text('#', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text(isMedicalHistory ? 'CLINICAL HISTORY CONDITION / QUESTION' : 'PHYSICAL EVALUATION PARAMETER', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('DEFAULT QUESTIONNAIRE TYPE', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                  ],
+                  rows: items.asMap().entries.map((entry) {
+                    final idx = entry.key + 1;
+                    final item = entry.value;
 
-              return DataRow(
-                cells: [
-                  DataCell(Text(idx.toString(), style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: context.colorScheme.onSurfaceVariant))),
-                  DataCell(
-                    Row(
-                      children: [
-                        Icon(isMedicalHistory ? Icons.check_box_outline_blank_rounded : Icons.fact_check_outlined, size: 18, color: context.colorScheme.primary),
-                        const SizedBox(width: 12),
-                        Text(item, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ),
-                  DataCell(
-                    AppStatusBadge(
-                      label: isMedicalHistory ? 'YES / NO TOGGLE' : 'NORMAL / ABNORMAL / TEXT',
-                      backgroundColor: context.isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                      textColor: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          tooltip: 'Edit Parameter Title',
-                          onPressed: () => _showAddStringItemDialog(context, current, isMedicalHistory, oldItem: item),
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(idx.toString(), style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: context.colorScheme.onSurfaceVariant))),
+                        DataCell(
+                          Row(
+                            children: [
+                              Icon(isMedicalHistory ? Icons.check_box_outline_blank_rounded : Icons.fact_check_outlined, size: 18, color: context.colorScheme.primary),
+                              const SizedBox(width: 12),
+                              Text(item, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete_outline_rounded, size: 18, color: context.colorScheme.error),
-                          tooltip: 'Remove Parameter',
-                          onPressed: () => _deleteStringItem(current, isMedicalHistory, item),
+                        DataCell(
+                          AppStatusBadge(
+                            label: isMedicalHistory ? 'YES / NO TOGGLE' : 'NORMAL / ABNORMAL / TEXT',
+                            backgroundColor: context.isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                            textColor: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                tooltip: 'Edit Parameter Title',
+                                onPressed: () => _showAddStringItemDialog(context, current, isMedicalHistory, oldItem: item),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline_rounded, size: 18, color: context.colorScheme.error),
+                                tooltip: 'Remove Parameter',
+                                onPressed: () => _deleteStringItem(current, isMedicalHistory, item),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -419,76 +428,83 @@ class _MasterDataPageState extends ConsumerState<MasterDataPage> with SingleTick
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
-            dataRowMinHeight: 64,
-            dataRowMaxHeight: 64,
-            horizontalMargin: 24,
-            columnSpacing: 32,
-            columns: [
-              DataColumn(label: Text('LAB CATEGORY', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('TEST / ANALYTE NAME', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('REFERENCE RANGE / CUTOFF', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('DEFAULT UNITS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('STATUS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-              DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
-            ],
-            rows: tests.map((test) {
-              Color badgeBg = ext.badgeTealBg;
-              Color badgeText = ext.badgeTealText;
-              if (test.category.toUpperCase().contains('BLOOD') || test.category.toUpperCase().contains('HEMATO')) {
-                badgeBg = ext.statusUnfitBg;
-                badgeText = ext.statusUnfitText;
-              } else if (test.category.toUpperCase().contains('URINE')) {
-                badgeBg = ext.badgeAmberBg;
-                badgeText = ext.badgeAmberText;
-              } else if (test.category.toUpperCase().contains('SERO') || test.category.toUpperCase().contains('VIRO')) {
-                badgeBg = ext.badgePurpleBg;
-                badgeText = ext.badgePurpleText;
-              }
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(ext.tableHeaderBg),
+                  dataRowMinHeight: 64,
+                  dataRowMaxHeight: 64,
+                  horizontalMargin: 24,
+                  columnSpacing: 32,
+                  columns: [
+                    DataColumn(label: Text('LAB CATEGORY', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('TEST / ANALYTE NAME', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('REFERENCE RANGE / CUTOFF', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('DEFAULT UNITS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('STATUS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                    DataColumn(label: Text('ACTIONS', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
+                  ],
+                  rows: tests.map((test) {
+                    Color badgeBg = ext.badgeTealBg;
+                    Color badgeText = ext.badgeTealText;
+                    if (test.category.toUpperCase().contains('BLOOD') || test.category.toUpperCase().contains('HEMATO')) {
+                      badgeBg = ext.statusUnfitBg;
+                      badgeText = ext.statusUnfitText;
+                    } else if (test.category.toUpperCase().contains('URINE')) {
+                      badgeBg = ext.badgeAmberBg;
+                      badgeText = ext.badgeAmberText;
+                    } else if (test.category.toUpperCase().contains('SERO') || test.category.toUpperCase().contains('VIRO')) {
+                      badgeBg = ext.badgePurpleBg;
+                      badgeText = ext.badgePurpleText;
+                    }
 
-              return DataRow(
-                cells: [
-                  DataCell(AppStatusBadge(label: test.category.toUpperCase(), backgroundColor: badgeBg, textColor: badgeText)),
-                  DataCell(
-                    Text(test.name, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  ),
-                  DataCell(
-                    Text(test.referenceRange.isNotEmpty ? test.referenceRange : 'Qualitative / Negative', style: context.textTheme.bodyMedium?.copyWith(fontFamily: 'monospace')),
-                  ),
-                  DataCell(
-                    Text(test.defaultUnit.isNotEmpty ? test.defaultUnit : '-', style: context.textTheme.bodyMedium),
-                  ),
-                  DataCell(
-                    AppStatusBadge(
-                      label: test.isMandatory ? 'MANDATORY GAMCA' : 'OPTIONAL TEST',
-                      backgroundColor: test.isMandatory ? ext.statusFitBg : ext.statusDraftBg,
-                      textColor: test.isMandatory ? ext.statusFitText : ext.statusDraftText,
-                    ),
-                  ),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          tooltip: 'Edit Laboratory Test',
-                          onPressed: () => _showLabTestDialog(context, current, oldTest: test),
+                    return DataRow(
+                      cells: [
+                        DataCell(AppStatusBadge(label: test.category.toUpperCase(), backgroundColor: badgeBg, textColor: badgeText)),
+                        DataCell(
+                          Text(test.name, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete_outline_rounded, size: 18, color: context.colorScheme.error),
-                          tooltip: 'Delete Test Definition',
-                          onPressed: () => _deleteLabTest(current, test),
+                        DataCell(
+                          Text(test.referenceRange.isNotEmpty ? test.referenceRange : 'Qualitative / Negative', style: context.textTheme.bodyMedium?.copyWith(fontFamily: 'monospace')),
+                        ),
+                        DataCell(
+                          Text(test.defaultUnit.isNotEmpty ? test.defaultUnit : '-', style: context.textTheme.bodyMedium),
+                        ),
+                        DataCell(
+                          AppStatusBadge(
+                            label: test.isMandatory ? 'MANDATORY GAMCA' : 'OPTIONAL TEST',
+                            backgroundColor: test.isMandatory ? ext.statusFitBg : ext.statusDraftBg,
+                            textColor: test.isMandatory ? ext.statusFitText : ext.statusDraftText,
+                          ),
+                        ),
+                        DataCell(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                tooltip: 'Edit Laboratory Test',
+                                onPressed: () => _showLabTestDialog(context, current, oldTest: test),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline_rounded, size: 18, color: context.colorScheme.error),
+                                tooltip: 'Delete Test Definition',
+                                onPressed: () => _deleteLabTest(current, test),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -625,16 +641,29 @@ class _LabTestFormDialogState extends ConsumerState<_LabTestFormDialog> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                CheckboxListTile(
-                  title: Text('Mandatory GAMCA Test Requirement', style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
-                  subtitle: Text('If checked, this test is required before a candidate can be certified FIT.', style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
-                  value: _isMandatory,
-                  onChanged: (val) {
-                    if (val != null) setState(() => _isMandatory = val);
-                  },
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
+                Container(
+                  decoration: BoxDecoration(
+                    color: _isMandatory
+                        ? context.colorScheme.primary.withValues(alpha: 0.08)
+                        : (context.isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _isMandatory
+                          ? context.colorScheme.primary.withValues(alpha: 0.4)
+                          : context.colorScheme.outline.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: CheckboxListTile(
+                    title: Text('Mandatory GAMCA Test Requirement', style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                    subtitle: Text('If checked, this test is required before a candidate can be certified FIT.', style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                    value: _isMandatory,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _isMandatory = val);
+                    },
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ],
             ),
