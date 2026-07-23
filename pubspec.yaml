@@ -1,0 +1,54 @@
+name: medical_report_system
+description: "Enterprise Medical Report Management System (Desktop Application)"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State Management & Routing
+  flutter_riverpod: ^2.6.1
+  go_router: ^14.8.0
+
+  # Database
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+
+  # PDF, Printing & Excel Export
+  pdf: ^3.11.2
+  printing: ^5.13.5
+  excel: ^4.0.6
+
+  # UI & Window Management
+  google_fonts: ^6.2.1
+  window_manager: ^0.4.3
+  responsive_framework: ^1.5.1
+
+  # QR/Barcode & File Utilities
+  qr_flutter: ^4.1.0
+  barcode_widget: ^2.0.4
+  file_picker: ^8.1.7
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  intl: ^0.19.0
+  uuid: ^4.5.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  isar_generator: ^3.1.0+1
+  build_runner: ^2.4.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fonts/
+    - assets/images/
+    - assets/icons/
