@@ -7,6 +7,7 @@ import '../features/report_preview_page.dart';
 import '../features/report_history_page.dart';
 import '../features/patients_page.dart';
 import '../features/templates_page.dart';
+import '../features/template_designer_page.dart';
 import '../features/master_data_page.dart';
 import '../features/settings_page.dart';
 import '../features/backup_page.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const String reportHistory = '/reports/history';
   static const String patients = '/patients';
   static const String templates = '/templates';
+  static const String templateDesigner = '/templates/designer/:id';
   static const String masterData = '/master-data';
   static const String settings = '/settings';
   static const String backup = '/backup';
@@ -77,6 +79,13 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.templates,
           builder: (context, state) => const TemplatesPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.templateDesigner,
+          builder: (context, state) {
+            final id = state.pathParameters['id'] ?? 'new';
+            return TemplateDesignerPage(templateId: id);
+          },
         ),
         GoRoute(
           path: AppRoutes.masterData,

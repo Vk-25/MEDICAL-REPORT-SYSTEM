@@ -391,7 +391,6 @@ class _ReportHistoryPageState extends ConsumerState<ReportHistoryPage> {
 
   Widget _buildReportsTable(BuildContext context, List<Report> reports, List<Patient> patients) {
     final ext = Theme.of(context).extension<AppThemeExtension>() ?? AppThemeExtension.light;
-    final allSelected = reports.isNotEmpty && _selectedReportIds.length == reports.where((r) => r.id != null).length;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -419,20 +418,6 @@ class _ReportHistoryPageState extends ConsumerState<ReportHistoryPage> {
               });
             },
             columns: [
-              DataColumn(
-                label: Checkbox(
-                  value: allSelected,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val == true) {
-                        _selectedReportIds.addAll(reports.where((r) => r.id != null).map((r) => r.id!));
-                      } else {
-                        _selectedReportIds.clear();
-                      }
-                    });
-                  },
-                ),
-              ),
               DataColumn(label: Text('SERIAL #', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
               DataColumn(label: Text('CANDIDATE / PATIENT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
               DataColumn(label: Text('PASSPORT', style: context.textTheme.labelLarge?.copyWith(fontSize: 11, letterSpacing: 0.8))),
@@ -460,20 +445,6 @@ class _ReportHistoryPageState extends ConsumerState<ReportHistoryPage> {
                   });
                 },
                 cells: [
-                  DataCell(
-                    Checkbox(
-                      value: isSelected,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val == true && report.id != null) {
-                            _selectedReportIds.add(report.id!);
-                          } else if (report.id != null) {
-                            _selectedReportIds.remove(report.id);
-                          }
-                        });
-                      },
-                    ),
-                  ),
                   DataCell(
                     Text(
                       report.serialNumber,

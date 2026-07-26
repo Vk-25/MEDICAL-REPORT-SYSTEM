@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'database.dart';
 
 enum ReportStatus { draft, pending, completed, printed }
@@ -1184,6 +1185,30 @@ class ReportTemplate {
   final bool isDefault;
   final DateTime createdAt;
 
+  // Custom visual styles
+  final String primaryColorHex;
+  final String textColorHex;
+  final String headerBgColorHex;
+  final String borderColorHex;
+  final double borderWidth;
+  final bool showOuterBorder;
+  final bool showInnerBorders;
+  final bool blockBorderOnly;
+  final double headerFontSize;
+  final double titleFontSize;
+  final double bodyFontSize;
+  final double tableHeaderFontSize;
+  final double tableBodyFontSize;
+  final double sectionSpacing;
+  final double leftColumnFlex;
+  final double rightColumnFlex;
+  final List<String> sectionOrder;
+  final List<String> blockOrder;
+  final Map<String, String> customLabels;
+  final List<double> columnWidths;
+  final Map<String, double> blockSpacings;
+  final Map<String, List<double>> rowColumnWidths;
+
   const ReportTemplate({
     required this.id,
     required this.name,
@@ -1194,16 +1219,82 @@ class ReportTemplate {
     required this.clinicPhone,
     required this.isDefault,
     required this.createdAt,
+    this.primaryColorHex = '#0F766E',
+    this.textColorHex = '#000000',
+    this.headerBgColorHex = '#FFFFFF',
+    this.borderColorHex = '#000000',
+    this.borderWidth = 0.5,
+    this.showOuterBorder = true,
+    this.showInnerBorders = true,
+    this.blockBorderOnly = true,
+    this.headerFontSize = 18.0,
+    this.titleFontSize = 9.0,
+    this.bodyFontSize = 7.0,
+    this.tableHeaderFontSize = 6.8,
+    this.tableBodyFontSize = 6.8,
+    this.sectionSpacing = 3.0,
+    this.leftColumnFlex = 3.2,
+    this.rightColumnFlex = 2.0,
+    this.sectionOrder = const ['header', 'info', 'table', 'footer'],
+    this.blockOrder = const [
+      'eye_ear_urine',
+      'systemic_stool',
+      'gastro_blood',
+      'other_serology',
+      'extremities_lipid',
+      'hernia_elisa'
+    ],
+    this.customLabels = const {},
+    this.columnWidths = const [3.2, 2.0, 3.2, 2.0],
+    this.blockSpacings = const {},
+    this.rowColumnWidths = const {},
   });
 
+  String getLabel(String key, String defaultValue) {
+    return customLabels[key] ?? defaultValue;
+  }
+
+  double getBlockSpacing(String blockKey) {
+    return blockSpacings[blockKey] ?? 1.5;
+  }
+
+  List<double> getRowWidths(int rowIndex) {
+    return rowColumnWidths['row_$rowIndex'] ?? columnWidths;
+  }
+
   Template toTemplate() {
+    final Map<String, dynamic> layoutMap = {
+      'layoutType': layoutType.name,
+      'primaryColorHex': primaryColorHex,
+      'textColorHex': textColorHex,
+      'headerBgColorHex': headerBgColorHex,
+      'borderColorHex': borderColorHex,
+      'borderWidth': borderWidth,
+      'showOuterBorder': showOuterBorder,
+      'showInnerBorders': showInnerBorders,
+      'blockBorderOnly': blockBorderOnly,
+      'headerFontSize': headerFontSize,
+      'titleFontSize': titleFontSize,
+      'bodyFontSize': bodyFontSize,
+      'tableHeaderFontSize': tableHeaderFontSize,
+      'tableBodyFontSize': tableBodyFontSize,
+      'sectionSpacing': sectionSpacing,
+      'leftColumnFlex': leftColumnFlex,
+      'rightColumnFlex': rightColumnFlex,
+      'sectionOrder': sectionOrder,
+      'blockOrder': blockOrder,
+      'customLabels': customLabels,
+      'columnWidths': columnWidths,
+      'blockSpacings': blockSpacings,
+      'rowColumnWidths': rowColumnWidths,
+    };
     return Template(
       id: int.tryParse(id),
       name: name,
       description: '$headerTitle|$clinicName|$clinicAddress|$clinicPhone',
       type: layoutType.name,
       isDefault: isDefault,
-      layoutJson: '{"layoutType":"${layoutType.name}"}',
+      layoutJson: jsonEncode(layoutMap),
       createdAt: createdAt,
     );
   }
@@ -1213,6 +1304,13 @@ class ReportTemplate {
     ReportLayoutType lType = ReportLayoutType.standard;
     if (t.type == 'compact') lType = ReportLayoutType.compact;
     if (t.type == 'detailed') lType = ReportLayoutType.detailed;
+
+    Map<String, dynamic> layoutMap = {};
+    try {
+      if (t.layoutJson.isNotEmpty) {
+        layoutMap = jsonDecode(t.layoutJson);
+      }
+    } catch (_) {}
 
     return ReportTemplate(
       id: t.id?.toString() ?? '0',
@@ -1224,6 +1322,47 @@ class ReportTemplate {
       clinicPhone: parts.length > 3 ? parts[3] : '',
       isDefault: t.isDefault,
       createdAt: t.createdAt,
+      primaryColorHex: layoutMap['primaryColorHex'] ?? '#0F766E',
+      textColorHex: layoutMap['textColorHex'] ?? '#000000',
+      headerBgColorHex: layoutMap['headerBgColorHex'] ?? '#FFFFFF',
+      borderColorHex: layoutMap['borderColorHex'] ?? '#000000',
+      borderWidth: (layoutMap['borderWidth'] as num?)?.toDouble() ?? 0.5,
+      showOuterBorder: layoutMap['showOuterBorder'] ?? true,
+      showInnerBorders: layoutMap['showInnerBorders'] ?? true,
+      blockBorderOnly: layoutMap['blockBorderOnly'] ?? true,
+      headerFontSize: (layoutMap['headerFontSize'] as num?)?.toDouble() ?? 18.0,
+      titleFontSize: (layoutMap['titleFontSize'] as num?)?.toDouble() ?? 9.0,
+      bodyFontSize: (layoutMap['bodyFontSize'] as num?)?.toDouble() ?? 7.0,
+      tableHeaderFontSize: (layoutMap['tableHeaderFontSize'] as num?)?.toDouble() ?? 6.8,
+      tableBodyFontSize: (layoutMap['tableBodyFontSize'] as num?)?.toDouble() ?? 6.8,
+      sectionSpacing: (layoutMap['sectionSpacing'] as num?)?.toDouble() ?? 3.0,
+      leftColumnFlex: (layoutMap['leftColumnFlex'] as num?)?.toDouble() ?? 3.2,
+      rightColumnFlex: (layoutMap['rightColumnFlex'] as num?)?.toDouble() ?? 2.0,
+      sectionOrder: layoutMap['sectionOrder'] != null 
+          ? List<String>.from(layoutMap['sectionOrder']) 
+          : const ['header', 'info', 'table', 'footer'],
+      blockOrder: layoutMap['blockOrder'] != null
+          ? List<String>.from(layoutMap['blockOrder'])
+          : const [
+              'eye_ear_urine',
+              'systemic_stool',
+              'gastro_blood',
+              'other_serology',
+              'extremities_lipid',
+              'hernia_elisa'
+            ],
+      customLabels: layoutMap['customLabels'] != null
+          ? Map<String, String>.from(layoutMap['customLabels'])
+          : const {},
+      columnWidths: layoutMap['columnWidths'] != null
+          ? List<double>.from(layoutMap['columnWidths'])
+          : const [3.2, 2.0, 3.2, 2.0],
+      blockSpacings: layoutMap['blockSpacings'] != null
+          ? Map<String, double>.from(layoutMap['blockSpacings'])
+          : const {},
+      rowColumnWidths: layoutMap['rowColumnWidths'] != null
+          ? (layoutMap['rowColumnWidths'] as Map).map((k, v) => MapEntry(k.toString(), List<double>.from(v)))
+          : const {},
     );
   }
 
@@ -1237,6 +1376,28 @@ class ReportTemplate {
     String? clinicPhone,
     bool? isDefault,
     DateTime? createdAt,
+    String? primaryColorHex,
+    String? textColorHex,
+    String? headerBgColorHex,
+    String? borderColorHex,
+    double? borderWidth,
+    bool? showOuterBorder,
+    bool? showInnerBorders,
+    bool? blockBorderOnly,
+    double? headerFontSize,
+    double? titleFontSize,
+    double? bodyFontSize,
+    double? tableHeaderFontSize,
+    double? tableBodyFontSize,
+    double? sectionSpacing,
+    double? leftColumnFlex,
+    double? rightColumnFlex,
+    List<String>? sectionOrder,
+    List<String>? blockOrder,
+    Map<String, String>? customLabels,
+    List<double>? columnWidths,
+    Map<String, double>? blockSpacings,
+    Map<String, List<double>>? rowColumnWidths,
   }) {
     return ReportTemplate(
       id: id ?? this.id,
@@ -1248,6 +1409,28 @@ class ReportTemplate {
       clinicPhone: clinicPhone ?? this.clinicPhone,
       isDefault: isDefault ?? this.isDefault,
       createdAt: createdAt ?? this.createdAt,
+      primaryColorHex: primaryColorHex ?? this.primaryColorHex,
+      textColorHex: textColorHex ?? this.textColorHex,
+      headerBgColorHex: headerBgColorHex ?? this.headerBgColorHex,
+      borderColorHex: borderColorHex ?? this.borderColorHex,
+      borderWidth: borderWidth ?? this.borderWidth,
+      showOuterBorder: showOuterBorder ?? this.showOuterBorder,
+      showInnerBorders: showInnerBorders ?? this.showInnerBorders,
+      blockBorderOnly: blockBorderOnly ?? this.blockBorderOnly,
+      headerFontSize: headerFontSize ?? this.headerFontSize,
+      titleFontSize: titleFontSize ?? this.titleFontSize,
+      bodyFontSize: bodyFontSize ?? this.bodyFontSize,
+      tableHeaderFontSize: tableHeaderFontSize ?? this.tableHeaderFontSize,
+      tableBodyFontSize: tableBodyFontSize ?? this.tableBodyFontSize,
+      sectionSpacing: sectionSpacing ?? this.sectionSpacing,
+      leftColumnFlex: leftColumnFlex ?? this.leftColumnFlex,
+      rightColumnFlex: rightColumnFlex ?? this.rightColumnFlex,
+      sectionOrder: sectionOrder ?? this.sectionOrder,
+      blockOrder: blockOrder ?? this.blockOrder,
+      customLabels: customLabels ?? this.customLabels,
+      columnWidths: columnWidths ?? this.columnWidths,
+      blockSpacings: blockSpacings ?? this.blockSpacings,
+      rowColumnWidths: rowColumnWidths ?? this.rowColumnWidths,
     );
   }
 }
